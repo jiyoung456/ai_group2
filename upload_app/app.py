@@ -1,60 +1,51 @@
-from flask import Flask, request, redirect, url_for, render_template, send_from_directory
+from flask import Flask, jsonify, request, render_template, make_response
+from flask_login import LoginManager, current_user, login_required, login_user, logout_user
+from flask_cors import CORS
 import os
-import urllib.parse
+import gdown
+from tensorflow.keras.models import load_model
 
-app = Flask(__name__)
+# Flask setup
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
-# Set the upload folder and allowed extensions
-UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+app = Flask(__name__, static_url_path='/static')
+CORS(app)
+app.secret_key = 'dave_server'
 
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+login_manager = LoginManager()
+login_manager.init_app(app)
 
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+# Google Drive file ID and destination
+FILE_ID = 'your_google_drive_file_id_here'
+MODEL_DEST = 'model.h5'
+
+# Download the model if it doesn't exist
+if not os.path.exists(MODEL_DEST):
+    gdown.download(f"https://drive.google.com/uc?id=1g-AB4ZK96MfYIUhGsJ4AM4fncXs4MoMM", MODEL_DEST, quiet=False)
+
+# Load the model
+model = load_model(MODEL_DEST)
 
 @app.route('/')
-def upload_form():
-    return render_template('upload.html')
+def index():
+    return render_template('index.html')
 
-@app.route('/', methods=['POST'])
+@app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
-        print("No file part in request")
-        return redirect(request.url)
-    
-    file = request.files['file']
-    
-    if file.filename == '':
-        print("No selected file")
-        return redirect(request.url)
-    
-    if file and allowed_file(file.filename):
-        filename = file.filename
-        safe_filename = urllib.parse.quote(filename)  # URL encode the filename
-        save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        
-        try:
-            file.save(save_path)
-            print("File saved successfully at:", save_path)
-        except Exception as e:
-            print(f"Error saving file: {e}")
-            return "There was an error saving the file."
-        
-        return render_template('success.html', filename=safe_filename)
-    else:
-        print("File type not allowed")
-        return "File type not allowed"
+        return jsonify({"error": "No file part"}), 400
 
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
-    decoded_filename = urllib.parse.unquote(filename)  # URL decode the filename
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], decoded_filename)
-    print(f"Serving file from: {file_path}")
-    return send_from_directory(app.config['UPLOAD_FOLDER'], decoded_filename)
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+
+    if file:
+        # Process and use your model here
+        # Example: Make a prediction and return the result
+        return jsonify({"message": "File received and processed"}), 200
+
+    return jsonify({"error": "Invalid file type"}), 400
 
 if __name__ == '__main__':
-    if not os.path.exists(UPLOAD_FOLDER):
-        os.makedirs(UPLOAD_FOLDER)
     app.run(debug=True)
