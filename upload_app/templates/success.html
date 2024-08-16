@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Upload Successful</title>
+    <style>
+      img {
+        max-width: 100%;
+        height: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Upload Successful</h1>
+    <p>Your file "{{ filename }}" has been uploaded successfully.</p>
+    <!-- Ensure the URL for the image is correct -->
+    <img src="{{ url_for('uploaded_file', filename=filename) }}" alt="Uploaded Image">
+    <br>
+    <a href="{{ url_for('upload_form') }}">Upload another file</a>
+  </body>
+</html>

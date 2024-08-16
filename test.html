@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Image from Gallery</title>
+</head>
+<body>
+    <h1>Select an Image from Your Gallery</h1>
+    <input type="file" accept="image/*" id="imageUpload" onchange="previewImage(event)">
+    <br><br>
+    <img id="imagePreview" style="max-width: 300px; display: none;">
+
+    <script>
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.getElementById('imagePreview');
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+    </script>
+</body>
+</html>
